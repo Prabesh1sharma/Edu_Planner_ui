@@ -1,5 +1,3 @@
-// lib/api/auth.js
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Helper function to handle API responses
@@ -7,7 +5,6 @@ const handleResponse = async (response) => {
   const data = await response.json()
   
   if (!response.ok) {
-    // Handle different error formats from your FastAPI backend
     const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`
     throw new Error(errorMessage)
   }
@@ -28,12 +25,12 @@ const handleError = (error) => {
   }
 }
 
-// Login function - updated to match your FastAPI backend
+
 export const login = async (credentials) => {
   try {
-    // Transform the credentials to match your UserLogin model
+    
     const loginData = {
-      username: credentials['username/email'], // Your backend expects 'username' field
+      username: credentials['username/email'], 
       password: credentials.password
     }
 
