@@ -7,16 +7,16 @@ export default function Navbar() {
         <nav className="fixed left-0 top-0 h-full w-16 bg-gray-100 shadow-lg z-50">
             <div className="p-3">
                 {/* Logo Image */}
-                <div className="mb-9 text-center ">
+                <div className="mb-9 text-center -mx-2">
                     <Image
                         src="/EDULogo.png"
                         alt="EDU Planner Logo"
-                        width={50}
-                        height={50}
+                        width={80}
+                        height={80}
                         className="mx-auto"
                     />
                 </div>
-                
+                        
                 {/* Navigation Items */}
                 <ul className="space-y-3">
                     <li className="group relative">

@@ -1,5 +1,7 @@
 import Navbar from '../../components/navbar';
 import Metrics from '../../components/metrics';
+import StreakChart from '../../components/streakChart';
+import ActivityFeed from '../../components/activityFeed';
 import { User, LogOut } from 'lucide-react';
 
 export default function Home() {
@@ -19,13 +21,13 @@ export default function Home() {
                         <div className="relative group">
                             <div className="flex items-center space-x-3 bg-white rounded-lg shadow-md px-4 py-2 cursor-pointer hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                                    <User size={18} className="text-white" />
+                                    <span className="text-white text-sm font-semibold">p</span>
                                 </div>
                                 <span className="text-gray-700 font-medium">Prabesh</span>
                             </div>
                             
                             {/* Dropdown Menu */}
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-100">
                                 <div className="py-2">
                                     <a 
                                         href="/profile" 
@@ -34,6 +36,7 @@ export default function Home() {
                                         <User size={16} />
                                         <span>Profile</span>
                                     </a>
+                                    <hr className="my-1 border-gray-100" />
                                     <a 
                                         href="/logout" 
                                         className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors duration-200"
@@ -47,9 +50,14 @@ export default function Home() {
                     </div>
                 </div>
                 
-                {/* Metrics */}
-                <div className="max-w-7xl mx-auto">
+                {/* Dashboard Content */}
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Metrics */}
                     <Metrics />
+                    
+                    {/* Streak Chart above Activity Feed */}
+                    <StreakChart />
+                    <ActivityFeed />
                 </div>
             </main>
         </div>
