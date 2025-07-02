@@ -1,31 +1,38 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function StreakChart() {
-    // Generate dummy data for the last 365 days
-    const generateStreakData = () => {
-        const data = [];
-        const today = new Date();
-        
-        for (let i = 364; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            
-            // Random activity level (0-4) with some days having no activity
-            const level = Math.random() > 0.25 ? Math.floor(Math.random() * 4) + 1 : 0;
-            
-            data.push({
-                date: date.toISOString().split('T')[0],
-                level: level,
-                count: level === 0 ? 0 : level + Math.floor(Math.random() * 3),
-                month: date.getMonth(),
-                year: date.getFullYear()
-            });
-        }
-        return data;
-    };
+    const [streakData, setStreakData] = useState(null);
+     useEffect(() => {
+        // Generate dummy data only on the client
+        const generateStreakData = () => {
+            const data = [];
+            const today = new Date();
+            for (let i = 364; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const level = Math.random() > 0.25 ? Math.floor(Math.random() * 4) + 1 : 0;
+                data.push({
+                    date: date.toISOString().split('T')[0],
+                    level: level,
+                    count: level === 0 ? 0 : level + Math.floor(Math.random() * 3),
+                    month: date.getMonth(),
+                    year: date.getFullYear()
+                });
+            }
+            return data;
+        };
+        setStreakData(generateStreakData());
+    }, []);
 
-    const [streakData] = useState(generateStreakData());
+    if (!streakData) {
+        // Render a placeholder while data is generating on the client
+        return (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+                Loading Streak Chart...
+            </div>
+        );
+    }
     
     // Get color intensity based on activity level
     const getColorClass = (level) => {
