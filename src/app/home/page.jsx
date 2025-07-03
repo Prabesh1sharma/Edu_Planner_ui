@@ -21,7 +21,7 @@ export default function Home() {
                         <div className="relative group">
                             <div className="flex items-center space-x-3 bg-white rounded-lg shadow-md px-4 py-2 cursor-pointer hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                                    <span className="text-white text-sm font-semibold">p</span>
+                                    <span className="text-white text-sm font-semibold">P</span>
                                 </div>
                                 <span className="text-gray-700 font-medium">Prabesh</span>
                             </div>
