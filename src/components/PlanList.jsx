@@ -1,19 +1,39 @@
+'use client'
+import { useState } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
+import AddPlanModal from './AddPlanModal';
 
 export default function PlanList({ plans, onAddPlan }) {
+    const [showModal, setShowModal] = useState(false);
+    const [localPlans, setLocalPlans] = useState(plans);
+
+    const handleAdd = (plan) => {
+        setLocalPlans([
+            ...localPlans,
+            {
+                id: localPlans.length + 1,
+                title: plan.title,
+                completed: false,
+                estimatedEndDate: plan.estimatedEndDate,
+                subPlansCount: 0,
+                subPlans: []
+            }
+        ]);
+    };
+
     return (
         <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Plans</h2>
                 <button
-                    onClick={onAddPlan}
+                    onClick={() => setShowModal(true)}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow transition"
                 >
                     + Add Plan
                 </button>
             </div>
             <ul className="space-y-4">
-                {plans.map((plan) => (
+                {localPlans.map((plan) => (
                     <li
                         key={plan.id}
                         className="flex items-center justify-between bg-gray-50 rounded-xl px-5 py-4 shadow-sm"
@@ -42,6 +62,11 @@ export default function PlanList({ plans, onAddPlan }) {
                     </li>
                 ))}
             </ul>
+            <AddPlanModal
+                open={showModal}
+                onClose={() => setShowModal(false)}
+                onAdd={handleAdd}
+            />
         </div>
     );
 }
