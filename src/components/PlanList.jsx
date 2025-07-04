@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
 import AddPlanModal from './AddPlanModal';
+import Link from 'next/link';
 
 export default function PlanList({ plans, onAddPlan }) {
     const [showModal, setShowModal] = useState(false);
@@ -55,9 +56,12 @@ export default function PlanList({ plans, onAddPlan }) {
                             <div className="text-xs text-gray-500 font-medium">
                                 Sub Plans: {plan.subPlansCount}
                             </div>
-                            <button className="text-indigo-600 font-semibold text-sm hover:underline">
-                                View Sub Plans
-                            </button>
+                            <Link
+                                href={`/Plans/1/1`}
+                                className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full transition-colors"
+                            >
+                                View Subplans
+                            </Link>
                         </div>
                     </li>
                 ))}
