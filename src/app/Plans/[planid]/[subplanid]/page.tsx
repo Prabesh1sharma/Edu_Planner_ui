@@ -67,7 +67,7 @@ export default function SubPlanPage() {
                                     </td>
                                     <td className="py-3 px-4 text-center">
                                         <Link
-                                            href={`/Plans/1/1`}
+                                            href={`/Plans/1/1/1`}
                                             className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full transition-colors"
                                         >
                                             View Details
