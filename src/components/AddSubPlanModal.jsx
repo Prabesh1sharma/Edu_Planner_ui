@@ -1,18 +1,24 @@
 'use client'
 import { useState } from 'react';
 
-export default function AddPlanModal({ open, onClose, onAdd }) {
-    const [name, setName] = useState('');
-    const [date, setDate] = useState('');
+export default function AddSubPlanModal({ open, onClose, onAdd }) {
+    const [topic, setTopic] = useState('');
     const [description, setDescription] = useState('');
+    const [date, setDate] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!name || !date) return;
-        onAdd({ title: name, estimatedEndDate: date,description });
-        setName('');
-        setDate('');
+        if (!topic.trim() || !description.trim() || !date) return;
+        onAdd({
+            id: Date.now(),
+            name: topic,
+            description,
+            estimatedEndDate: date,
+            completed: false
+        });
+        setTopic('');
         setDescription('');
+        setDate('');
         onClose();
     };
 
@@ -20,7 +26,7 @@ export default function AddPlanModal({ open, onClose, onAdd }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm relative">
+            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative">
                 <button
                     onClick={onClose}
                     className="absolute top-3 right-4 text-gray-400 hover:text-indigo-600 text-2xl"
@@ -28,17 +34,17 @@ export default function AddPlanModal({ open, onClose, onAdd }) {
                 >
                     &times;
                 </button>
-                <h3 className="text-xl font-bold text-indigo-700 mb-6">Add New Plan</h3>
+                <h3 className="text-xl font-bold text-indigo-700 mb-6">Add Sub Plan</h3>
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Plan Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
                         <input
                             type="text"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
+                            value={topic}
+                            onChange={e => setTopic(e.target.value)}
                             required
                             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                            placeholder="e.g. Frontend Basics"
+                            placeholder="Subplan Topic"
                         />
                     </div>
                     <div>
@@ -49,7 +55,7 @@ export default function AddPlanModal({ open, onClose, onAdd }) {
                             required
                             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                             rows={3}
-                            placeholder="Plan Description"
+                            placeholder="Subplan Description"
                         />
                     </div>
                     <div>
@@ -66,7 +72,7 @@ export default function AddPlanModal({ open, onClose, onAdd }) {
                         type="submit"
                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition"
                     >
-                        Add Plan
+                        Add Sub Plan
                     </button>
                 </form>
             </div>

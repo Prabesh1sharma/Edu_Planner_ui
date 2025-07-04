@@ -1,35 +1,44 @@
 'use client'
+import { useState } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '../../../../components/navbar';
+import AddSubPlanModal from '../../../../components/AddSubPlanModal';
 
 export default function SubPlanPage() {
-    // Dummy data for "Frontend Basics"
     const plan = {
         name: "Frontend Basics",
         description: "Learn the essential building blocks of web development including HTML, CSS, and JavaScript.",
     };
 
-    const subPlans = [
+    const [subPlans, setSubPlans] = useState([
         {
             id: 1,
             name: "HTML & CSS",
+            description: "Learn HTML structure and CSS styling.",
             estimatedEndDate: "2024-08-10",
             completed: true,
         },
         {
             id: 2,
             name: "JavaScript Essentials",
+            description: "Master JavaScript fundamentals.",
             estimatedEndDate: "2024-08-20",
             completed: false,
         },
         {
             id: 3,
             name: "Responsive Design",
+            description: "Understand responsive layouts.",
             estimatedEndDate: "2024-08-30",
             completed: false,
         },
-    ];
+    ]);
+    const [showModal, setShowModal] = useState(false);
+
+    const handleAddSubPlan = (newSubPlan) => {
+        setSubPlans([ ...subPlans, newSubPlan ]);
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -42,7 +51,15 @@ export default function SubPlanPage() {
 
             {/* Sub Plans Table */}
             <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Sub Plans</h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">Sub Plans</h2>
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow transition"
+                    >
+                        + Add Sub Plan
+                    </button>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="min-w-full border-separate border-spacing-y-2">
                         <thead>
@@ -79,6 +96,11 @@ export default function SubPlanPage() {
                     </table>
                 </div>
             </div>
+            <AddSubPlanModal
+                open={showModal}
+                onClose={() => setShowModal(false)}
+                onAdd={handleAddSubPlan}
+            />
         </div>
     );
 }
