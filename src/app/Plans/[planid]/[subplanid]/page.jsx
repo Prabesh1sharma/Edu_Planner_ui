@@ -37,16 +37,25 @@ export default function SubPlanPage() {
     const [showModal, setShowModal] = useState(false);
 
     const handleAddSubPlan = (newSubPlan) => {
-        setSubPlans([ ...subPlans, newSubPlan ]);
+        setSubPlans([...subPlans, newSubPlan]);
     };
 
     return (
         <div className="min-h-screen bg-gray-50 py-10 px-4">
-            <Navbar/>
+            <Navbar />
             {/* Plan Topic and Description */}
             <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow p-8 mb-8">
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-2">{plan.name}</h1>
+                <div className="flex justify-between items-center mb-2">
+                    <h1 className="text-3xl font-extrabold text-gray-900">{plan.name}</h1>
+                    <button
+                        type="submit"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition"
+                    >
+                        Generate Sub Plan
+                    </button>
+                </div>
                 <p className="text-gray-600">{plan.description}</p>
+
             </div>
 
             {/* Sub Plans Table */}
