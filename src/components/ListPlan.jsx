@@ -124,12 +124,15 @@ export default function ListPlan({ open, onClose }) {
 
             {/* Footer */}
             <div className="pt-4 border-t border-gray-100">
-                <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors">
+                <Link
+                    href="/create-plan"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Create New Plan
-                </button>
+                </Link>
             </div>
         </div>
     );
