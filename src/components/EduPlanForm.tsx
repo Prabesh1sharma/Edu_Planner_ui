@@ -17,6 +17,10 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
     const [estimateDate, setEstimateDate] = useState('');
     const [description, setDescription] = useState('');
     const [topics, setTopics] = useState<string[]>(['']);
+    
+    // AI-specific inputs
+    const [difficultyLevel, setDifficultyLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+    const [timeCommitmentHours, setTimeCommitmentHours] = useState('');
 
     // For manual mode, allow user to add topics
     const handleTopicChange = (idx: number, value: string) => {
@@ -37,8 +41,9 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
             });
         } else {
             // Dummy AI generation logic (replace with API call later)
+            // You can use difficultyLevel and timeCommitmentHours in your API call
             onGenerate({
-                description: description || `AI-generated plan for ${name}`,
+                description: description || `AI-generated ${difficultyLevel} plan for ${name} (${timeCommitmentHours} hours/week)`,
                 topics: [
                     'AI Introduction',
                     'AI Core Concepts',
@@ -53,6 +58,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
     return (
         <form onSubmit={handleGenerate} className="space-y-6 bg-white p-6 rounded-xl shadow-md max-w-xl mx-auto">
             <h2 className="text-2xl font-bold text-indigo-700 mb-4">Create a New EduPlan</h2>
+            
             {/* Mode Switcher */}
             <div className="flex gap-4 mb-4">
                 <button
@@ -70,6 +76,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     Generate Plan with AI
                 </button>
             </div>
+
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Plan Name</label>
                 <input
@@ -81,6 +88,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     placeholder="e.g. Full Stack Developer Journey"
                 />
             </div>
+
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Completion Date</label>
                 <input
@@ -91,6 +99,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
             </div>
+
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
@@ -101,6 +110,39 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     placeholder="Briefly describe your plan..."
                 />
             </div>
+
+            {/* AI-specific inputs */}
+            {mode === 'ai' && (
+                <>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty Level</label>
+                        <select
+                            value={difficultyLevel}
+                            onChange={e => setDifficultyLevel(e.target.value as 'beginner' | 'intermediate' | 'advanced')}
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        >
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Time Commitment (hours per week)</label>
+                        <input
+                            type="number"
+                            value={timeCommitmentHours}
+                            onChange={e => setTimeCommitmentHours(e.target.value)}
+                            min="1"
+                            max="168"
+                            required
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            placeholder="e.g. 10"
+                        />
+                    </div>
+                </>
+            )}
+
             {/* Manual topic entry for manual mode */}
             {mode === 'manual' && (
                 <div>
@@ -124,6 +166,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     </div>
                 </div>
             )}
+
             <button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition"
