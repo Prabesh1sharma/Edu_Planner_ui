@@ -4,6 +4,20 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '../authApi';
 
+// Helper function to set cookies
+const setCookie = (name, value, days = 7) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
+};
+
+// Helper function to set cookie with expiration time
+const setCookieWithExpiration = (name, value, expiresIn) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (expiresIn * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
+};
+
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     identifier: '', // This will handle both username and email
@@ -64,28 +78,33 @@ export default function LoginPage() {
       const result = await login(loginData)
       
       if (result.success) {
-        // Handle successful login - store tokens from your FastAPI response
+        // Handle successful login - store tokens in cookies
         console.log('Login successful:', result.message)
         
-        // Store tokens based on your TokenResponse model
+        // Store access token in cookies
         if (result.data.access_token) {
-          localStorage.setItem('access_token', result.data.access_token)
-        }
-        if (result.data.refresh_token) {
-          localStorage.setItem('refresh_token', result.data.refresh_token)
-        }
-        if (result.data.token_type) {
-          localStorage.setItem('token_type', result.data.token_type)
-        }
-        if (result.data.expires_in) {
-          // Store expiration time
-          const expirationTime = new Date().getTime() + (result.data.expires_in * 1000)
-          localStorage.setItem('token_expires_at', expirationTime.toString())
+          if (result.data.expires_in) {
+            // Use the actual expiration time from the API
+            setCookieWithExpiration('access_token', result.data.access_token, result.data.expires_in);
+          } else {
+            // Default to 7 days if no expiration provided
+            setCookie('access_token', result.data.access_token, 7);
+          }
         }
         
-        // Store any user data if available
+        // Store refresh token in cookies (longer expiration)
+        if (result.data.refresh_token) {
+          setCookie('refresh_token', result.data.refresh_token, 30); // 30 days for refresh token
+        }
+        
+        // Store token type
+        if (result.data.token_type) {
+          setCookie('token_type', result.data.token_type, 7);
+        }
+        
+        // Store user data if available
         if (result.data.user) {
-          localStorage.setItem('user', JSON.stringify(result.data.user))
+          setCookie('user', JSON.stringify(result.data.user), 7);
         }
         
         // Redirect to home page
