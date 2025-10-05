@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '../authApi';
 
@@ -18,14 +18,33 @@ const setCookieWithExpiration = (name, value, expiresIn) => {
   document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
 };
 
-export default function LoginPage() {
+// Separate component for the login form to handle useSearchParams properly
+function LoginForm() {
   const [formData, setFormData] = useState({
     identifier: '', // This will handle both username and email
     password: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Handle success message from URL parameters
+  useEffect(() => {
+    const message = searchParams.get('message')
+    if (message) {
+      setSuccessMessage(message)
+      // Auto-dismiss after 5 seconds and clean URL
+      const timer = setTimeout(() => {
+        setSuccessMessage('')
+        // Remove the query parameter from URL
+        router.replace('/login', undefined, { shallow: true })
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams, router])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -40,6 +59,10 @@ export default function LoginPage() {
         [name]: ''
       }))
     }
+  }
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
   }
 
   const validateForm = () => {
@@ -84,10 +107,8 @@ export default function LoginPage() {
         // Store access token in cookies
         if (result.data.access_token) {
           if (result.data.expires_in) {
-            // Use the actual expiration time from the API
             setCookieWithExpiration('access_token', result.data.access_token, result.data.expires_in);
           } else {
-            // Default to 7 days if no expiration provided
             setCookie('access_token', result.data.access_token, 7);
           }
         }
@@ -108,10 +129,10 @@ export default function LoginPage() {
         }
         
         // Redirect to home page
-        router.push('/')
+        router.push('/home')
         
       } else {
-        // Handle API error - your backend returns error in different formats
+        // Handle API error
         if (result.error.includes('Incorrect username or password')) {
           setErrors({ submit: 'Invalid username or password. Please try again.' })
         } else if (result.error.includes('User account is deactivated')) {
@@ -144,7 +165,7 @@ export default function LoginPage() {
         </div>
 
         {/* Success Message */}
-        {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('message') && (
+        {successMessage && (
           <div className="bg-green-50 border border-green-200 rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -154,7 +175,7 @@ export default function LoginPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-green-800">
-                  {new URLSearchParams(window.location.search).get('message')}
+                  {successMessage}
                 </p>
               </div>
             </div>
@@ -191,18 +212,38 @@ export default function LoginPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className={`appearance-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                >
+                  {showPassword ? (
+                    // Eye slash icon (password visible)
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    </svg>
+                  ) : (
+                    // Eye icon (password hidden)
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
               )}
@@ -274,5 +315,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Main component wrapped in Suspense to handle useSearchParams
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }

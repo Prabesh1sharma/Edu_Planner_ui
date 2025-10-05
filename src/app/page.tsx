@@ -1,3 +1,4 @@
+import Link from 'next/link';
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -9,12 +10,18 @@ export default function HomePage() {
               <h1 className="text-2xl font-bold text-indigo-600">EduPlanner</h1>
             </div>
             <div className="flex space-x-4">
-              <button className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
                 Login
-              </button>
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+              </Link>
+              <Link
+                href="/signup"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+              >
                 Sign Up
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -30,7 +37,7 @@ export default function HomePage() {
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Organize your courses, track assignments, manage deadlines, and achieve your academic goals with our comprehensive education planning platform.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-200">
               Get Started Free
