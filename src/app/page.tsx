@@ -1,5 +1,41 @@
+'use client'
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { isAuthenticated } from '../apiUtils/Header';
+
 export default function HomePage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check authentication status and redirect accordingly
+    const checkAuthAndRedirect = () => {
+      if (isAuthenticated()) {
+        // User is logged in, redirect to /home
+        router.push('/home');
+      } else {
+        // User is not logged in, stay on homepage
+        setIsLoading(false);
+      }
+    };
+
+    // Small delay to prevent flash of content
+    const timer = setTimeout(checkAuthAndRedirect, 100);
+    return () => clearTimeout(timer);
+  }, [router]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Navigation */}
@@ -39,12 +75,12 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-200">
+            <Link href="/signup" className="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-200 text-center">
               Get Started Free
-            </button>
-            <button className="border-2 border-indigo-600 text-indigo-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-50 transition duration-200">
-              Watch Demo
-            </button>
+            </Link>
+            <Link href="/login" className="border-2 border-indigo-600 text-indigo-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-50 transition duration-200 text-center">
+              Login
+            </Link>
           </div>
         </div>
 
@@ -96,9 +132,9 @@ export default function HomePage() {
             <p className="text-lg text-gray-600 mb-8">
               Join thousands of students who have improved their academic performance with EduPlanner.
             </p>
-            <button className="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-200">
+            <Link href="/signup" className="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-200 inline-block">
               Start Planning Today
-            </button>
+            </Link>
           </div>
         </div>
       </main>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { login } from '../authApi';
 import { useToast } from '../../../context/ToastContext'
 
+
 // Helper function to set cookies
 const setCookie = (name, value, days = 7) => {
   const expires = new Date();
@@ -123,8 +124,8 @@ function LoginForm() {
         }
         
         // Store user data if available
-        if (result.data.user) {
-          setCookie('user', JSON.stringify(result.data.user), 7);
+        if (result.data.user_id) {
+          setCookie('user_id', result.data.user_id, 7);
         }
         
         // Redirect to home page after a short delay to show the success toast
