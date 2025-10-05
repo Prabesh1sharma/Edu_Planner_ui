@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
-
+import { getHeaders } from '../../apiUtils/Header'
 // Helper function to handle API responses
 const handleResponse = async (response) => {
   const data = await response.json()
@@ -36,9 +36,7 @@ export const login = async (credentials) => {
 
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getHeaders(),
       body: JSON.stringify(loginData),
     })
 
@@ -62,6 +60,19 @@ export const signup = async (userData) => {
     return await handleResponse(response)
   } catch (error) {
     return handleError(error)
+  }
+}
+
+export const getCurrentUser = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'GET',
+      headers: getHeaders(true), 
+    })
+
+    return response.json()
+  } catch (error) {
+    return error.message
   }
 }
 

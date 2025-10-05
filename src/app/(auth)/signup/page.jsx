@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signup } from "../authApi";
@@ -17,6 +17,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { showSuccess, showError } = useToast()
   const router = useRouter();
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
