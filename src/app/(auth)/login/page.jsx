@@ -1,8 +1,9 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '../authApi';
+import { useToast } from '../../../context/ToastContext'
 
 // Helper function to set cookies
 const setCookie = (name, value, days = 7) => {
@@ -26,25 +27,22 @@ function LoginForm() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
-  const [successMessage, setSuccessMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const { showSuccess, showError } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const hasShownMessage = useRef(false) // Add this to prevent duplicate calls
 
-  // Handle success message from URL parameters
+  // Handle success message from URL parameters (FIXED - run only once)
   useEffect(() => {
     const message = searchParams.get('message')
-    if (message) {
-      setSuccessMessage(message)
-      // Auto-dismiss after 5 seconds and clean URL
-      const timer = setTimeout(() => {
-        setSuccessMessage('')
-        // Remove the query parameter from URL
-        router.replace('/login', undefined, { shallow: true })
-      }, 5000)
-      return () => clearTimeout(timer)
+    if (message && !hasShownMessage.current) {
+      hasShownMessage.current = true
+      showSuccess(message)
+      // Clean URL after showing toast
+      router.replace('/login', undefined, { shallow: true })
     }
-  }, [searchParams, router])
+  }, [searchParams, router]) // Removed showSuccess from dependencies
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -103,6 +101,7 @@ function LoginForm() {
       if (result.success) {
         // Handle successful login - store tokens in cookies
         console.log('Login successful:', result.message)
+        showSuccess('Login successful! Welcome back.')
         
         // Store access token in cookies
         if (result.data.access_token) {
@@ -128,23 +127,28 @@ function LoginForm() {
           setCookie('user', JSON.stringify(result.data.user), 7);
         }
         
-        // Redirect to home page
-        router.push('/home')
+        // Redirect to home page after a short delay to show the success toast
+        setTimeout(() => {
+          router.push('/home')
+        }, 1500)
         
       } else {
         // Handle API error
+        let errorMessage = result.error
         if (result.error.includes('Incorrect username or password')) {
-          setErrors({ submit: 'Invalid username or password. Please try again.' })
+          errorMessage = 'Invalid username or password. Please try again.'
         } else if (result.error.includes('User account is deactivated')) {
-          setErrors({ submit: 'Your account has been deactivated. Please contact support.' })
-        } else {
-          setErrors({ submit: result.error })
+          errorMessage = 'Your account has been deactivated. Please contact support.'
         }
+        showError(errorMessage)
+        setErrors({ submit: errorMessage })
       }
     } catch (error) {
       // Handle unexpected errors
       console.error('Login error:', error)
-      setErrors({ submit: 'An unexpected error occurred. Please try again.' })
+      const errorMessage = 'An unexpected error occurred. Please try again.'
+      showError(errorMessage)
+      setErrors({ submit: errorMessage })
     } finally {
       setIsLoading(false)
     }
@@ -163,24 +167,6 @@ function LoginForm() {
             Sign in to continue your educational journey
           </p>
         </div>
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-800">
-                  {successMessage}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Form */}
         <div className="bg-white py-8 px-6 shadow-xl rounded-lg">

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signup } from "../authApi";
+import { useToast } from '../../../context/ToastContext'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const { showSuccess, showError } = useToast()
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -79,18 +81,21 @@ export default function SignUpPage() {
 
       if (result.success) {
         // Handle successful signup
-        console.log("Signup successful:", result.message);
+        showSuccess('Account created successfully! Please login to continue.')
 
-        // Redirect to login page or dashboard
-        router.push("/login?message=Account created successfully");
+        // Redirect to login page after showing toast
+        setTimeout(() => {
+          router.push("/login?message=Account created successfully");
+        }, 2000)
       } else {
         // Handle API error
+        showError(result.error)
         setErrors({ submit: result.error });
       }
     } catch (error) {
       // Handle unexpected errors
       console.error("Signup error:", error);
-      setErrors({ submit: "An unexpected error occurred. Please try again." });
+      showError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false);
     }
