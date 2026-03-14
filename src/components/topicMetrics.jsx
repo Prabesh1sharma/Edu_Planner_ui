@@ -1,9 +1,14 @@
-export default function Metrics() {
+export default function Metrics({ todo = 0, completed = 0, due = 0 }) {
     const metrics = [
-        { label: "TODO", value: 15, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: "COMPLETED", value: 10, color: "text-green-600", bg: "bg-green-50" },
-        { label: "DUE", value: 2, color: "text-red-600", bg: "bg-red-50" },
-        { label: "EFFICIENCY", value: "89%", color: "text-indigo-600", bg: "bg-indigo-50" },
+        { label: "TODO", value: todo, color: "text-blue-600", bg: "bg-blue-50" },
+        { label: "COMPLETED", value: completed, color: "text-green-600", bg: "bg-green-50" },
+        { label: "DUE", value: due, color: "text-red-600", bg: "bg-red-50" },
+        { 
+            label: "EFFICIENCY", 
+            value: completed + todo > 0 ? `${Math.round((completed / (completed + todo)) * 100)}%` : "0%", 
+            color: "text-indigo-600", 
+            bg: "bg-indigo-50" 
+        },
     ];
     return (
         <div className="max-w-5xl mx-auto w-full mb-8">

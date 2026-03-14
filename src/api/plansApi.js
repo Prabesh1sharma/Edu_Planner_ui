@@ -24,3 +24,52 @@ export const getAllCourses = async () => {
         throw error;
     }
 };
+/**
+ * Fetches specific course details from the API.
+ * @param {string} courseId - The ID of the course to fetch.
+ * @returns {Promise<Object>} The course details.
+ */
+export const getCourseDetail = async (courseId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Plans/course-detail/${courseId}`, {
+            method: 'GET',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getCourseDetail:', error);
+        throw error;
+    }
+};
+
+/**
+ * Fetches all plans (modules) for a specific course from the API.
+ * @param {string} courseId - The ID of the course to fetch plans for.
+ * @returns {Promise<{course_id: string, modules: Array}>} The course modules.
+ */
+export const getCoursePlans = async (courseId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Plans/get_all_plans/${courseId}`, {
+            method: 'GET',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getCoursePlans:', error);
+        throw error;
+    }
+};
