@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
 import AddPlanModal from './AddPlanModal';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 export default function PlanList({ plans, onAddPlan }) {
     const [showModal, setShowModal] = useState(false);
     const [localPlans, setLocalPlans] = useState(plans);
+    const { planid } = useParams();
 
     const handleAdd = (plan) => {
         setLocalPlans([
@@ -57,7 +59,7 @@ export default function PlanList({ plans, onAddPlan }) {
                                 Sub Plans: {plan.subPlansCount}
                             </div>
                             <Link
-                                href={`/Plans/1/1`}
+                                href={`/Plans/${planid}/${plan.id}`}
                                 className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full transition-colors"
                             >
                                 View Subplans

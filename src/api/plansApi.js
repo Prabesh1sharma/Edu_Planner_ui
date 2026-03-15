@@ -73,3 +73,28 @@ export const getCoursePlans = async (courseId) => {
         throw error;
     }
 };
+/**
+ * Fetches specific plan details for a course from the API.
+ * @param {string} courseId - The ID of the course.
+ * @param {string} planId - The ID of the plan.
+ * @returns {Promise<Object>} The plan details.
+ */
+export const getPlanDetails = async (courseId, planId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Plans/get_plan_details/${courseId}/${planId}`, {
+            method: 'GET',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getPlanDetails:', error);
+        throw error;
+    }
+};
