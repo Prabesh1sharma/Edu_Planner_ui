@@ -100,6 +100,32 @@ export const getPlanDetails = async (courseId, planId) => {
 };
 
 /**
+ * Fetches all subplans for a specific course and plan (module) from the API.
+ * @param {string} courseId - The ID of the course.
+ * @param {string} planId - The ID of the plan (module).
+ * @returns {Promise<Object>} The subplans list.
+ */
+export const getCourseSubPlans = async (courseId, planId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/SubPlans/get_subplans/${courseId}/${planId}`, {
+            method: 'GET',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getCourseSubPlans:', error);
+        throw error;
+    }
+};
+
+/**
  * Stream SSE from /SubPlans/create_structured_subplans
  *
  * @param {Object} payload

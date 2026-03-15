@@ -5,7 +5,7 @@ import { CheckSquare, Square } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '../../../../components/navbar';
 import AddSubPlanModal from '../../../../components/AddSubPlanModal';
-import { getPlanDetails } from '../../../../api/plansApi';
+import { getPlanDetails, getCourseSubPlans } from '../../../../api/plansApi';
 import { useStreamSubPlan } from '../../../../hooks/useStreamSubPlan';
 
 // ─── Submodule type config ────────────────────────────────────────────────────
@@ -157,7 +157,11 @@ export default function SubPlanPage() {
             
             try {
                 setLoading(true);
-                const data = await getPlanDetails(courseId, planId);
+                const [data, subplansData] = await Promise.all([
+                    getPlanDetails(courseId, planId),
+                    getCourseSubPlans(courseId, planId)
+                ]);
+                
                 setPlan({
                     name: data.name,
                     description: data.description,
@@ -165,9 +169,23 @@ export default function SubPlanPage() {
                     endDate: data.end_date,
                     completed: data.completed
                 });
+                
+                if (subplansData && subplansData.subplans) {
+                    setSubPlans(subplansData.subplans.map(sub => ({
+                        id: sub.id,
+                        name: sub.name,
+                        description: sub.description,
+                        estimatedEndDate: sub.end_date,
+                        completed: sub.completed,
+                        type: sub.type,
+                    })));
+                } else {
+                    setSubPlans([]);
+                }
+
                 setError(null);
             } catch (err) {
-                console.error('Failed to fetch plan details:', err);
+                console.error('Failed to fetch plan data:', err);
                 setError(err.message || 'Failed to load plan details.');
             } finally {
                 setLoading(false);
@@ -319,7 +337,9 @@ export default function SubPlanPage() {
                             <tbody>
                                 {subPlans.map((sub) => (
                                     <tr key={sub.id} className="bg-gray-50 rounded-lg shadow-sm">
-                                        <td className="py-3 px-4 font-medium text-gray-800">{sub.name}</td>
+                                        <td className="py-3 px-4 font-medium text-gray-800" title={sub.name}>
+                                            {sub.name?.length > 39 ? `${sub.name.substring(0, 39)}...` : sub.name}
+                                        </td>
                                         <td className="py-3 px-4 text-gray-600">{sub.estimatedEndDate}</td>
                                         <td className="py-3 px-4 text-center">
                                             {sub.completed ? (
