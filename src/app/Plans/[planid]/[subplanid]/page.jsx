@@ -1,15 +1,17 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { CheckSquare, Square } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '../../../../components/navbar';
 import AddSubPlanModal from '../../../../components/AddSubPlanModal';
+import { getPlanDetails } from '../../../../api/plansApi';
 
 export default function SubPlanPage() {
-    const plan = {
-        name: "Frontend Basics",
-        description: "Learn the essential building blocks of web development including HTML, CSS, and JavaScript.",
-    };
+    const { planid: courseId, subplanid: planId } = useParams();
+    const [plan, setPlan] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [subPlans, setSubPlans] = useState([
         {
@@ -36,9 +38,66 @@ export default function SubPlanPage() {
     ]);
     const [showModal, setShowModal] = useState(false);
 
+    useEffect(() => {
+        const fetchPlanData = async () => {
+            if (!courseId || !planId) return;
+            
+            try {
+                setLoading(true);
+                const data = await getPlanDetails(courseId, planId);
+                setPlan({
+                    name: data.name,
+                    description: data.description,
+                    startDate: data.start_date,
+                    endDate: data.end_date,
+                    completed: data.completed
+                });
+                setError(null);
+            } catch (err) {
+                console.error('Failed to fetch plan details:', err);
+                setError(err.message || 'Failed to load plan details.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPlanData();
+    }, [courseId, planId]);
+
     const handleAddSubPlan = (newSubPlan) => {
         setSubPlans([...subPlans, newSubPlan]);
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Navbar />
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-500 font-medium">Loading subplan details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Navbar />
+                <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
+                    <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Subplan</h2>
+                    <p className="text-gray-600 mb-6">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -93,7 +152,7 @@ export default function SubPlanPage() {
                                     </td>
                                     <td className="py-3 px-4 text-center">
                                         <Link
-                                            href={`/Plans/1/1/1`}
+                                            href={`/Plans/${courseId}/${planId}/${sub.id}`}
                                             className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full transition-colors"
                                         >
                                             View Details
