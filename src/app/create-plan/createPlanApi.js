@@ -39,11 +39,17 @@ export const createStructuredPlanStream = async (
   const dispatchLines = (text) => {
     const lines = text.split('\n')
     for (const rawLine of lines) {
-      const line = rawLine.trim()
+      let line = rawLine.trim()
       if (!line || line.startsWith(':')) continue   // comment / keep-alive
 
+      // Read all leading "data:" prefixes (in case of double prefix "data: data: {")
       if (line.startsWith('data:')) {
-        const data = line.slice(5).trim()
+        while (line.startsWith('data:')) {
+            line = line.slice(5).trim();
+        }
+        
+        const data = line;
+        
         if (data === '[DONE]') {
           if (typeof onComplete === 'function') onComplete()
           return true  // signals [DONE] was found

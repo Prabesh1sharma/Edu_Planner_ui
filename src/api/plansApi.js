@@ -98,3 +98,106 @@ export const getPlanDetails = async (courseId, planId) => {
         throw error;
     }
 };
+
+/**
+ * Stream SSE from /SubPlans/create_structured_subplans
+ *
+ * @param {Object} payload
+ * @param {string} payload.topic_id
+ * @param {string} payload.module_id
+ *
+ * @param {Object} options
+ * @param {(data: string) => void} [options.onMessage]
+ * @param {() => void} [options.onComplete]
+ * @param {(error: Error) => void} [options.onError]
+ * @param {AbortSignal} [options.signal]
+ *
+ * @returns {Promise<void>}
+ */
+export const createStructuredSubPlansStream = async (
+  { topic_id, module_id },
+  { onMessage, onComplete, onError, signal } = {}
+) => {
+  const controller = new AbortController();
+  const abortSignal = signal || controller.signal;
+
+  const dispatchLines = (text) => {
+    const lines = text.split('\n');
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith(':')) continue;
+
+      if (line.startsWith('data:')) {
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') {
+          if (typeof onComplete === 'function') onComplete();
+          return true;
+        }
+        if (typeof onMessage === 'function') {
+          onMessage(data);
+        }
+      }
+    }
+    return false;
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/SubPlans/create_structured_subplans`, {
+      method: 'POST',
+      headers: getHeaders(true, { Accept: 'text/event-stream' }),
+      body: JSON.stringify({ topic_id, module_id }),
+      signal: abortSignal,
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(text || `Request failed with status ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('SSE response body is not readable.');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+
+      if (value) {
+        const textChunk = decoder.decode(value, { stream: !done });
+        console.log('[stream-api] received chunk bytes:', value.byteLength, 'decoded text:', JSON.stringify(textChunk));
+        buffer += textChunk;
+      }
+
+      if (done) {
+        console.log('[stream-api] stream done. Remaining buffer:', JSON.stringify(buffer));
+        if (buffer.trim()) {
+          dispatchLines(buffer);
+          buffer = '';
+        }
+        break;
+      }
+
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline !== -1) {
+        const complete = buffer.slice(0, lastNewline + 1);
+        buffer = buffer.slice(lastNewline + 1);
+        dispatchLines(complete);
+      }
+    }
+
+    if (typeof onComplete === 'function') onComplete();
+
+  } catch (error) {
+    if (error?.name === 'AbortError') return;
+    if (typeof onError === 'function') {
+      onError(error);
+    } else {
+      console.error('createStructuredSubPlansStream error:', error);
+    }
+  } finally {
+    controller.abort();
+  }
+};

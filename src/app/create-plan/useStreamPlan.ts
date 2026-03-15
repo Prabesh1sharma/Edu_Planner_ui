@@ -103,9 +103,15 @@ export function useStreamPlan() {
                 appendLog(`MSG: ${raw.slice(0, 80)}`);
 
                 // Some SSE clients may still include the "data:" prefix; normalize it away
-                const normalized = raw.trim().startsWith('data:')
-                    ? raw.trim().slice(5).trim()
-                    : raw.trim();
+                let normalized = raw.trim();
+                while (normalized.startsWith('data:')) {
+                    normalized = normalized.slice(5).trim();
+                }
+
+                // Strip any literal "\n" or "\r" suffix just in case the server stringifies it inside the payload
+                while (normalized.endsWith('\\n') || normalized.endsWith('\\r')) {
+                    normalized = normalized.slice(0, -2).trim();
+                }
 
                 let parsed: any;
                 try {
