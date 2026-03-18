@@ -126,6 +126,33 @@ export const getCourseSubPlans = async (courseId, planId) => {
 };
 
 /**
+ * Fetches specific subplan details from the API.
+ * @param {string} courseId - The ID of the course.
+ * @param {string} planId - The ID of the plan.
+ * @param {string} subplanId - The ID of the subplan.
+ * @returns {Promise<Object>} The subplan details.
+ */
+export const getSubPlanDetail = async (courseId, planId, subplanId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/SubPlansDetail/${courseId}/${planId}/${subplanId}`, {
+            method: 'GET',
+            headers: getHeaders(true, { Accept: 'application/json' }),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getSubPlanDetail:', error);
+        throw error;
+    }
+};
+
+/**
  * Stream SSE from /SubPlans/create_structured_subplans
  *
  * @param {Object} payload
