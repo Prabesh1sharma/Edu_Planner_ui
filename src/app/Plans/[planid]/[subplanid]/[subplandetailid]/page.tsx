@@ -1,19 +1,87 @@
 'use client'
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import SubPlanDetail from '../../../../../components/SubPlanDetail';
 import NotesSection from '../../../../../components/NotesSection';
 import RecommendationsSection from '../../../../../components/RecommendationsSection';
 import Navbar from '../../../../../components/navbar';
+import { getSubPlanDetail } from '../../../../../api/plansApi';
 
 export default function SubPlanDetailPage() {
-    const subplan = {
-        title: "HTML & CSS",
-        description: "Master the basics of HTML structure and CSS styling, including layouts, colors, and typography."
-    };
+    const params = useParams();
+    const courseId = params.planid as string;
+    const planId = params.subplanid as string;
+    const subplanId = params.subplandetailid as string;
+
+    const [subplan, setSubplan] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!courseId || !planId || !subplanId) return;
+
+        const fetchDetail = async () => {
+            try {
+                setLoading(true);
+                const data = await getSubPlanDetail(courseId, planId, subplanId) as any;
+                
+                // Exclude the IDs and map 'name' to 'title' for the UI component
+                setSubplan({
+                    title: data.name,
+                    description: data.description,
+                    type: data.type,
+                    key_activities: data.key_activities,
+                    learning_outcomes: data.learning_outcomes
+                });
+                setError(null);
+            } catch (err: any) {
+                console.error(err);
+                setError(err.message || 'Failed to fetch subplan details');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDetail();
+    }, [courseId, planId, subplanId]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Navbar />
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
+                    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-500 font-medium">Loading details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !subplan) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Navbar />
+                <div className="flex-1 flex items-center justify-center py-20 px-4">
+                    <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md w-full">
+                        <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Details</h2>
+                        <p className="text-gray-600 mb-6">{error || 'Subplan not found'}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-10 px-4">
-            <Navbar/>
-            <div className="max-w-5xl mx-auto space-y-8">
+        <div className="min-h-screen bg-gray-50 pb-20">
+            <Navbar />
+            <div className="max-w-5xl mx-auto space-y-8 mt-10 px-4">
                 <SubPlanDetail subplan={subplan} />
                 <NotesSection />
                 <RecommendationsSection />

@@ -98,3 +98,159 @@ export const getPlanDetails = async (courseId, planId) => {
         throw error;
     }
 };
+
+/**
+ * Fetches all subplans for a specific course and plan (module) from the API.
+ * @param {string} courseId - The ID of the course.
+ * @param {string} planId - The ID of the plan (module).
+ * @returns {Promise<Object>} The subplans list.
+ */
+export const getCourseSubPlans = async (courseId, planId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/SubPlans/get_subplans/${courseId}/${planId}`, {
+            method: 'GET',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getCourseSubPlans:', error);
+        throw error;
+    }
+};
+
+/**
+ * Fetches specific subplan details from the API.
+ * @param {string} courseId - The ID of the course.
+ * @param {string} planId - The ID of the plan.
+ * @param {string} subplanId - The ID of the subplan.
+ * @returns {Promise<Object>} The subplan details.
+ */
+export const getSubPlanDetail = async (courseId, planId, subplanId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/SubPlansDetail/${courseId}/${planId}/${subplanId}`, {
+            method: 'GET',
+            headers: getHeaders(true, { Accept: 'application/json' }),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getSubPlanDetail:', error);
+        throw error;
+    }
+};
+
+/**
+ * Stream SSE from /SubPlans/create_structured_subplans
+ *
+ * @param {Object} payload
+ * @param {string} payload.topic_id
+ * @param {string} payload.module_id
+ *
+ * @param {Object} options
+ * @param {(data: string) => void} [options.onMessage]
+ * @param {() => void} [options.onComplete]
+ * @param {(error: Error) => void} [options.onError]
+ * @param {AbortSignal} [options.signal]
+ *
+ * @returns {Promise<void>}
+ */
+export const createStructuredSubPlansStream = async (
+  { topic_id, module_id },
+  { onMessage, onComplete, onError, signal } = {}
+) => {
+  const controller = new AbortController();
+  const abortSignal = signal || controller.signal;
+
+  const dispatchLines = (text) => {
+    const lines = text.split('\n');
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith(':')) continue;
+
+      if (line.startsWith('data:')) {
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') {
+          if (typeof onComplete === 'function') onComplete();
+          return true;
+        }
+        if (typeof onMessage === 'function') {
+          onMessage(data);
+        }
+      }
+    }
+    return false;
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/SubPlans/create_structured_subplans`, {
+      method: 'POST',
+      headers: getHeaders(true, { Accept: 'text/event-stream' }),
+      body: JSON.stringify({ topic_id, module_id }),
+      signal: abortSignal,
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(text || `Request failed with status ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('SSE response body is not readable.');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+
+      if (value) {
+        const textChunk = decoder.decode(value, { stream: !done });
+        console.log('[stream-api] received chunk bytes:', value.byteLength, 'decoded text:', JSON.stringify(textChunk));
+        buffer += textChunk;
+      }
+
+      if (done) {
+        console.log('[stream-api] stream done. Remaining buffer:', JSON.stringify(buffer));
+        if (buffer.trim()) {
+          dispatchLines(buffer);
+          buffer = '';
+        }
+        break;
+      }
+
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline !== -1) {
+        const complete = buffer.slice(0, lastNewline + 1);
+        buffer = buffer.slice(lastNewline + 1);
+        dispatchLines(complete);
+      }
+    }
+
+    if (typeof onComplete === 'function') onComplete();
+
+  } catch (error) {
+    if (error?.name === 'AbortError') return;
+    if (typeof onError === 'function') {
+      onError(error);
+    } else {
+      console.error('createStructuredSubPlansStream error:', error);
+    }
+  } finally {
+    controller.abort();
+  }
+};
