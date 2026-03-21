@@ -88,7 +88,11 @@ export default function SubPlanDetailPage() {
                     topicId={planId} 
                     subplanId={subplanId} 
                 />
-                <RecommendationsSection />
+                <RecommendationsSection 
+                    courseId={courseId} 
+                    planId={planId} 
+                    subplanId={subplanId} 
+                />
             </div>
         </div>
     );
