@@ -83,7 +83,11 @@ export default function SubPlanDetailPage() {
             <Navbar />
             <div className="max-w-5xl mx-auto space-y-8 mt-10 px-4">
                 <SubPlanDetail subplan={subplan} />
-                <NotesSection />
+                <NotesSection 
+                    courseId={courseId} 
+                    topicId={planId} 
+                    subplanId={subplanId} 
+                />
                 <RecommendationsSection />
             </div>
         </div>
