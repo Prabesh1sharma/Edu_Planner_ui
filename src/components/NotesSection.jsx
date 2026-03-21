@@ -1,22 +1,22 @@
 'use client'
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Edit3, Plus, Trash2, BookOpen, Bold, Italic, Heading, List as ListIcon, Link as LinkIcon } from 'lucide-react';
+import { Edit3, Plus, Trash2, BookOpen, Bold, Italic, Heading, List as ListIcon, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { getNotesBySubplan, createNote, updateNote, deleteNote } from '../api/notesApi';
+import { useToast } from '../context/ToastContext';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
-export default function NotesSection() {
-    const [notes, setNotes] = useState([
-        { 
-            id: 1, 
-            topic: "CSS Fundamentals", 
-            description: "## Flexbox & Grid\n\nRemember to review the core differences between **Flexbox** (1D layouts) and **Grid** (2D layouts).\n\n### Tasks:\n- [x] Complete basic Flexbox tutorial\n- [ ] Practice 2 responsive Grid layouts\n- [ ] Review CSS variables" 
-        },
-        { 
-            id: 2, 
-            topic: "Project Ideas", 
-            description: "Some quick ideas for practice:\n1. A simple portfolio\n2. A weather app using fetching\n3. This **learning planner** app!" 
-        }
-    ]);
+export default function NotesSection({ courseId, topicId, subplanId }) {
+    const { showSuccess, showError } = useToast();
+    const [notes, setNotes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    
+    // Deletion state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [noteToDelete, setNoteToDelete] = useState(null);
     
     // Modes: 'view', 'edit', 'create', null (empty state)
     const [activeMode, setActiveMode] = useState(null);
@@ -26,6 +26,32 @@ export default function NotesSection() {
     const [editTopic, setEditTopic] = useState('');
     const [editDescription, setEditDescription] = useState('');
     const textareaRef = useRef(null);
+
+    useEffect(() => {
+        if (!subplanId) return;
+
+        const fetchNotes = async () => {
+            try {
+                setLoading(true);
+                const data = await getNotesBySubplan(subplanId);
+                const mappedNotes = data.map(n => ({
+                    id: n.notes_id,
+                    topic: n.topic || 'Untitled Note',
+                    description: n.notes || '',
+                    raw: n 
+                }));
+                setNotes(mappedNotes);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching notes:', err);
+                setError('Failed to load notes');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNotes();
+    }, [subplanId]);
 
     const activeNote = notes.find(n => n.id === selectedNoteId);
 
@@ -44,7 +70,6 @@ export default function NotesSection() {
         const newText = before + prefix + selected + suffix + after;
         setEditDescription(newText);
         
-        // Restore focus and cursor position after state updates
         setTimeout(() => {
             textarea.focus();
             textarea.setSelectionRange(
@@ -73,29 +98,72 @@ export default function NotesSection() {
         setActiveMode('edit');
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e?.preventDefault();
         if (!editTopic.trim() || !editDescription.trim()) return;
 
-        if (activeMode === 'create') {
-            const newNote = { id: Date.now(), topic: editTopic, description: editDescription };
-            setNotes([newNote, ...notes]);
-            setSelectedNoteId(newNote.id);
-            setActiveMode('view');
-        } else if (activeMode === 'edit') {
-            setNotes(notes.map(n =>
-                n.id === selectedNoteId ? { ...n, topic: editTopic, description: editDescription } : n
-            ));
-            setActiveMode('view');
+        setIsSaving(true);
+        try {
+            if (activeMode === 'create') {
+                const response = await createNote({
+                    course_id: courseId,
+                    topic_id: topicId,
+                    subplan_id: subplanId,
+                    topic: editTopic,
+                    notes: editDescription
+                });
+                
+                const newNote = { 
+                    id: response.note.notes_id, 
+                    topic: response.note.topic, 
+                    description: response.note.notes 
+                };
+                setNotes([newNote, ...notes]);
+                setSelectedNoteId(newNote.id);
+                setActiveMode('view');
+                showSuccess('Note created successfully!');
+            } else if (activeMode === 'edit') {
+                await updateNote(selectedNoteId, {
+                    topic: editTopic,
+                    notes: editDescription
+                });
+                
+                setNotes(notes.map(n =>
+                    n.id === selectedNoteId ? { ...n, topic: editTopic, description: editDescription } : n
+                ));
+                setActiveMode('view');
+                showSuccess('Note updated successfully!');
+            }
+        } catch (err) {
+            console.error('Error saving note:', err);
+            showError(err.message || 'Failed to save note. Please try again.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    const handleDelete = (id, e) => {
+    const handleDeleteClick = (id, e) => {
         e.stopPropagation();
-        setNotes(notes.filter(n => n.id !== id));
-        if (selectedNoteId === id) {
-            setSelectedNoteId(null);
-            setActiveMode(null);
+        setNoteToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!noteToDelete) return;
+
+        try {
+            await deleteNote(noteToDelete);
+            setNotes(notes.filter(n => n.id !== noteToDelete));
+            showSuccess('Note deleted successfully!');
+            if (selectedNoteId === noteToDelete) {
+                setSelectedNoteId(null);
+                setActiveMode(null);
+            }
+        } catch (err) {
+            console.error('Error deleting note:', err);
+            showError('Failed to delete note.');
+        } finally {
+            setNoteToDelete(null);
         }
     };
 
@@ -118,7 +186,17 @@ export default function NotesSection() {
                 </div>
                 
                 <div className="overflow-y-auto flex-1 p-3 space-y-2">
-                    {notes.length === 0 ? (
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center h-full text-indigo-500">
+                            <Loader2 className="w-8 h-8 animate-spin" />
+                            <p className="text-xs mt-2 text-gray-500">Loading notes...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="text-center p-6 text-red-500 text-sm">
+                            <p>{error}</p>
+                            <button onClick={() => window.location.reload()} className="underline mt-2">Retry</button>
+                        </div>
+                    ) : notes.length === 0 ? (
                         <div className="text-center p-6 text-gray-400 text-sm">
                             <p>No notes yet.</p>
                             <p>Click + to create one.</p>
@@ -143,7 +221,7 @@ export default function NotesSection() {
                                     </p>
                                 </div>
                                 <button
-                                    onClick={(e) => handleDelete(n.id, e)}
+                                    onClick={(e) => handleDeleteClick(n.id, e)}
                                     className={`p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 text-gray-400 hover:text-red-600 transition ${selectedNoteId === n.id ? 'opacity-100' : ''}`}
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -197,8 +275,10 @@ export default function NotesSection() {
                                 </button>
                                 <button 
                                     onClick={handleSave}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+                                    disabled={isSaving}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2 disabled:bg-indigo-400"
                                 >
+                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                     Save Note
                                 </button>
                             </div>
@@ -311,6 +391,14 @@ export default function NotesSection() {
                 .book-view th { background-color: #f9fafb; font-weight: 500; color: #111827; }
                 .book-view tr:nth-child(even) { background-color: #f9fafb; }
             `}</style>
+
+            <DeleteConfirmationModal 
+                open={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={confirmDelete}
+                title="Delete Note"
+                message="Are you sure you want to delete this note? This action cannot be undone."
+            />
         </div>
     );
 }
