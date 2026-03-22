@@ -19,10 +19,10 @@ export default function PlanPage() {
     useEffect(() => {
         const fetchData = async () => {
             if (!planid) return;
-            
+
             try {
                 setLoading(true);
-                
+
                 // Fetch course details and plans in parallel
                 const [detailData, plansData] = await Promise.all([
                     getCourseDetail(planid),
@@ -46,7 +46,7 @@ export default function PlanPage() {
                         title: module.name,
                         completed: module.completed,
                         estimatedEndDate: module.end_date,
-                        subPlansCount: 0, // Not provided by this endpoint
+                        subPlansCount: module.subplans_count,
                         subPlans: []
                     })));
                 }
@@ -90,7 +90,7 @@ export default function PlanPage() {
                         <div className="text-red-500 text-5xl mb-4">⚠️</div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Plan</h2>
                         <p className="text-gray-600 mb-6">{error}</p>
-                        <button 
+                        <button
                             onClick={() => window.location.reload()}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition"
                         >
@@ -108,10 +108,10 @@ export default function PlanPage() {
             <main className="flex-1 ml-16 py-10 px-6">
                 {topic && <TopicDetails topic={topic} />}
                 {topic && (
-                    <TopicMetrics 
-                        completed={topic.completed} 
-                        todo={topic.todo} 
-                        due={topic.due} 
+                    <TopicMetrics
+                        completed={topic.completed}
+                        todo={topic.todo}
+                        due={topic.due}
                     />
                 )}
                 <PlanList plans={planList} onAddPlan={handleAddPlan} />
