@@ -5,7 +5,8 @@ import { CheckSquare, Square } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '../../../../components/navbar';
 import AddSubPlanModal from '../../../../components/AddSubPlanModal';
-import { getPlanDetails, getCourseSubPlans } from '../../../../api/plansApi';
+import { getPlanDetails, getCourseSubPlans, toggleSubPlanCompletion } from '../../../../api/plansApi';
+import { useToast } from '../../../../context/ToastContext';
 import { useStreamSubPlan } from '../../../../hooks/useStreamSubPlan';
 
 // ─── Submodule type config ────────────────────────────────────────────────────
@@ -148,8 +149,30 @@ export default function SubPlanPage() {
     const [error, setError] = useState(null);
     const [subPlans, setSubPlans] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const { showSuccess, showError } = useToast();
 
     const { state: stream, start: startStream } = useStreamSubPlan();
+
+    const handleToggleComplete = async (subPlan) => {
+        try {
+            const newStatus = !subPlan.completed;
+            // Optimistically update
+            setSubPlans(prev => prev.map(s => s.id === subPlan.id ? { ...s, completed: newStatus } : s));
+            
+            const response = await toggleSubPlanCompletion(subPlan.id, planId, newStatus);
+            if (response.status === 'error' || response.error) {
+                // Revert on logical error
+                setSubPlans(prev => prev.map(s => s.id === subPlan.id ? { ...s, completed: subPlan.completed } : s));
+                showError(response.message || 'Error updating submodule completion status');
+            } else {
+                showSuccess(response.message || "Submodule completion status updated successfully");
+            }
+        } catch (error) {
+            // Revert on error
+            setSubPlans(prev => prev.map(s => s.id === subPlan.id ? { ...s, completed: subPlan.completed } : s));
+            showError(error.message || 'Error updating submodule completion status');
+        }
+    };
 
     useEffect(() => {
         const fetchPlanData = async () => {
@@ -342,11 +365,17 @@ export default function SubPlanPage() {
                                         </td>
                                         <td className="py-3 px-4 text-gray-600">{sub.estimatedEndDate}</td>
                                         <td className="py-3 px-4 text-center">
-                                            {sub.completed ? (
-                                                <CheckSquare className="text-green-500 w-5 h-5 mx-auto" />
-                                            ) : (
-                                                <Square className="text-gray-300 w-5 h-5 mx-auto" />
-                                            )}
+                                            <button
+                                                onClick={() => handleToggleComplete(sub)}
+                                                className="focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
+                                                title={sub.completed ? "Mark as incomplete" : "Mark as completed"}
+                                            >
+                                                {sub.completed ? (
+                                                    <CheckSquare className="text-green-500 w-5 h-5 mx-auto hover:text-green-600 transition-colors" />
+                                                ) : (
+                                                    <Square className="text-gray-300 w-5 h-5 mx-auto hover:text-gray-400 transition-colors" />
+                                                )}
+                                            </button>
                                         </td>
                                         <td className="py-3 px-4 text-center">
                                             <Link

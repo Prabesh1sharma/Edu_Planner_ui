@@ -254,3 +254,56 @@ export const createStructuredSubPlansStream = async (
     controller.abort();
   }
 };
+
+/**
+ * Toggles the completion status of a plan (module).
+ * @param {string} module_id - The ID of the module.
+ * @param {boolean} is_completed - The new completion status.
+ * @returns {Promise<Object>} The response message.
+ */
+export const togglePlanCompletion = async (module_id, is_completed) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Plans/is_completed?module_id=${module_id}&is_completed=${is_completed}`, {
+            method: 'POST',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in togglePlanCompletion:', error);
+        throw error;
+    }
+};
+
+/**
+ * Toggles the completion status of a subplan (submodule).
+ * @param {string} submodule_id - The ID of the submodule.
+ * @param {string} module_id - The ID of the parent module.
+ * @param {boolean} is_completed - The new completion status.
+ * @returns {Promise<Object>} The response message.
+ */
+export const toggleSubPlanCompletion = async (submodule_id, module_id, is_completed) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/SubPlans/is_completed?submodule_id=${submodule_id}&module_id=${module_id}&is_completed=${is_completed}`, {
+            method: 'POST',
+            headers: getHeaders(true),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in toggleSubPlanCompletion:', error);
+        throw error;
+    }
+};
