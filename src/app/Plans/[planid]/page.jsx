@@ -37,7 +37,8 @@ export default function PlanPage() {
                     progress: detailData.progress_percentage,
                     completed: detailData.completed,
                     todo: detailData.todo,
-                    due: detailData.due
+                    due: detailData.due,
+                    efficiency: detailData.efficency
                 });
 
                 if (plansData && plansData.modules) {
@@ -112,6 +113,7 @@ export default function PlanPage() {
                         completed={topic.completed}
                         todo={topic.todo}
                         due={topic.due}
+                        efficiency={topic.efficiency}
                     />
                 )}
                 <PlanList plans={planList} onAddPlan={handleAddPlan} />
