@@ -1,95 +1,103 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getHeatmapData, getStreakData, getActivityYears } from '../api/activityApi';
 
 export default function StreakChart() {
-    const [streakData, setStreakData] = useState(null);
-     useEffect(() => {
-        // Generate dummy data only on the client
-        const generateStreakData = () => {
-            const data = [];
-            const today = new Date();
-            for (let i = 364; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                const level = Math.random() > 0.25 ? Math.floor(Math.random() * 4) + 1 : 0;
-                data.push({
-                    date: date.toISOString().split('T')[0],
-                    level: level,
-                    count: level === 0 ? 0 : level + Math.floor(Math.random() * 3),
-                    month: date.getMonth(),
-                    year: date.getFullYear()
-                });
+    const [heatmapData, setHeatmapData] = useState([]);
+    const [streakInfo, setStreakInfo] = useState({ current_streak: 0, longest_streak: 0 });
+    const [totalActivities, setTotalActivities] = useState(0);
+    const [years, setYears] = useState([]);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [loading, setLoading] = useState(true);
+    const [tooltip, setTooltip] = useState(null);
+
+    const fetchYears = useCallback(async () => {
+        try {
+            const data = await getActivityYears();
+            setYears(data.years || []);
+            if (data.current_year) {
+                setSelectedYear(data.current_year);
             }
-            return data;
-        };
-        setStreakData(generateStreakData());
+        } catch (error) {
+            console.error('Failed to fetch years:', error);
+            setYears([new Date().getFullYear()]);
+        }
     }, []);
 
-    if (!streakData) {
-        // Render a placeholder while data is generating on the client
-        return (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-                Loading Streak Chart...
-            </div>
-        );
-    }
-    
-    // Get color intensity based on activity level
+    const fetchData = useCallback(async (year) => {
+        try {
+            setLoading(true);
+            const [heatmap, streak] = await Promise.all([
+                getHeatmapData(year),
+                getStreakData(),
+            ]);
+            setHeatmapData(heatmap.heatmap || []);
+            setTotalActivities(heatmap.total_activities || 0);
+            setStreakInfo(streak);
+        } catch (error) {
+            console.error('Failed to fetch activity data:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchYears();
+    }, [fetchYears]);
+
+    useEffect(() => {
+        fetchData(selectedYear);
+    }, [selectedYear, fetchData]);
+
     const getColorClass = (level) => {
-         const colors = [
-            'bg-gray-100', // No activity
-            'bg-blue-200', // Low activity
-            'bg-blue-400', // Medium activity
-            'bg-blue-600', // High activity
-            'bg-blue-800'  // Very high activity
+        const colors = [
+            'bg-gray-100',
+            'bg-blue-200',
+            'bg-blue-400',
+            'bg-blue-600',
+            'bg-blue-800'
         ];
         return colors[level] || colors[0];
     };
 
-    // Group data by weeks starting from Sunday
     const groupByWeeks = (data) => {
         const weeks = [];
         let currentWeek = [];
-        
+
         data.forEach((day, index) => {
-            const dayOfWeek = new Date(day.date).getDay(); // Sunday = 0, Monday = 1, etc.
-            
+            const dayOfWeek = new Date(day.date).getDay();
+
             if (index === 0) {
-                // Fill empty days at the beginning of first week
                 for (let i = 0; i < dayOfWeek; i++) {
                     currentWeek.push(null);
                 }
             }
-            
+
             currentWeek.push(day);
-            
+
             if (currentWeek.length === 7) {
                 weeks.push(currentWeek);
                 currentWeek = [];
             }
         });
-        
-        // Add remaining days
+
         if (currentWeek.length > 0) {
-            // Fill remaining slots with null
             while (currentWeek.length < 7) {
                 currentWeek.push(null);
             }
             weeks.push(currentWeek);
         }
-        
+
         return weeks;
     };
 
-    // Get month labels positioned correctly - Fixed to show all months
     const getMonthLabels = (weeks) => {
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const labels = [];
         let currentMonth = -1;
         const monthPositions = [];
-        
-        // First pass: find where each month starts
+
         weeks.forEach((week, weekIndex) => {
             const firstDay = week.find(day => day !== null);
             if (firstDay && firstDay.month !== currentMonth) {
@@ -97,31 +105,38 @@ export default function StreakChart() {
                 monthPositions.push({
                     month: monthNames[firstDay.month],
                     weekIndex: weekIndex,
-                    position: weekIndex * 18 // 12px square + 4px gap
                 });
             }
         });
-        
-        // Calculate spacing to fit all months within chart width
-        const chartWidth = weeks.length * 17; // Total chart width
-        const availableWidth = chartWidth - 100; // Leave space for years
-        const monthSpacing = availableWidth / (monthPositions.length - 1);
-        
-        // Create evenly spaced month labels
+
+        const chartWidth = weeks.length * 17;
+        const availableWidth = chartWidth - 100;
+        const monthSpacing = monthPositions.length > 1 ? availableWidth / (monthPositions.length - 1) : 0;
+
         monthPositions.forEach((month, index) => {
             labels.push({
                 month: month.month,
-                position: index * monthSpacing
+                position: index * monthSpacing,
             });
         });
-        
+
         return labels;
     };
 
-    const weeks = groupByWeeks(streakData);
+    if (loading && heatmapData.length === 0) {
+        return (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+                <div className="animate-pulse">
+                    <div className="h-6 w-40 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-4 w-64 bg-gray-200 rounded mb-6"></div>
+                    <div className="h-28 bg-gray-100 rounded"></div>
+                </div>
+            </div>
+        );
+    }
+
+    const weeks = groupByWeeks(heatmapData);
     const monthLabels = getMonthLabels(weeks);
-    const totalContributions = streakData.reduce((sum, day) => sum + day.count, 0);
-    const currentStreak = streakData.slice(-30).filter(day => day.level > 0).length;
 
     return (
         <div className="bg-white rounded-lg shadow-lg p-6">
@@ -132,23 +147,23 @@ export default function StreakChart() {
                     </h2>
                 </div>
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>{totalContributions} activities in the last year</span>
+                    <span>{totalActivities} activities in {selectedYear}</span>
                     <span className="text-green-600 font-medium">
-                        🔥 {currentStreak} day streak
+                        🔥 {streakInfo.current_streak} day streak
                     </span>
                 </div>
             </div>
-            
+
             {/* Chart Container */}
             <div className="relative bg-gray-50 rounded-lg p-4 border">
                 {/* Month Labels */}
                 <div className="relative h-4 mb-2">
                     <div className="absolute left-12 right-20">
                         {monthLabels.map((label, index) => (
-                            <div 
+                            <div
                                 key={index}
                                 className="absolute text-xs text-gray-600 font-medium"
-                                style={{ 
+                                style={{
                                     left: `${label.position}px`,
                                     transform: 'translateX(-50%)'
                                 }}
@@ -158,7 +173,7 @@ export default function StreakChart() {
                         ))}
                     </div>
                 </div>
-                
+
                 {/* Main Chart Area */}
                 <div className="flex">
                     {/* Weekday Labels */}
@@ -171,9 +186,9 @@ export default function StreakChart() {
                         <div></div>
                         <div></div>
                     </div>
-                    
+
                     {/* Streak Chart */}
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 relative">
                         {weeks.slice(0, 53).map((week, weekIndex) => (
                             <div key={weekIndex} className="flex flex-col gap-1">
                                 {week.map((day, dayIndex) => (
@@ -182,25 +197,55 @@ export default function StreakChart() {
                                         className={`w-3 h-3 rounded-sm cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-blue-400 ${
                                             day ? getColorClass(day.level) : 'bg-transparent'
                                         }`}
-                                        title={day ? `${day.date}: ${day.count} activities` : ''}
+                                        onMouseEnter={(e) => {
+                                            if (day) {
+                                                const rect = e.target.getBoundingClientRect();
+                                                setTooltip({
+                                                    x: rect.left + rect.width / 2,
+                                                    y: rect.top - 8,
+                                                    text: `${day.date}: ${day.count} ${day.count === 1 ? 'activity' : 'activities'}`,
+                                                });
+                                            }
+                                        }}
+                                        onMouseLeave={() => setTooltip(null)}
                                     />
                                 ))}
                             </div>
                         ))}
+
+                        {/* Tooltip */}
+                        {tooltip && (
+                            <div
+                                className="fixed z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg pointer-events-none whitespace-nowrap"
+                                style={{
+                                    left: `${tooltip.x}px`,
+                                    top: `${tooltip.y}px`,
+                                    transform: 'translate(-50%, -100%)',
+                                }}
+                            >
+                                {tooltip.text}
+                            </div>
+                        )}
                     </div>
-                    
+
                     {/* Year Labels - Right side */}
                     <div className="flex flex-col justify-center ml-8 space-y-2" style={{ height: '105px' }}>
-                        <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
-                            2025
-                        </div>
-                        <div className="text-xs text-gray-500">2024</div>
-                        <div className="text-xs text-gray-500">2023</div>
-                        <div className="text-xs text-gray-500">2022</div>
-                        <div className="text-xs text-gray-500">2021</div>
+                        {years.map((year) => (
+                            <button
+                                key={year}
+                                onClick={() => setSelectedYear(year)}
+                                className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                                    selectedYear === year
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
+                                }`}
+                            >
+                                {year}
+                            </button>
+                        ))}
                     </div>
                 </div>
-                
+
                 {/* Legend below the chart */}
                 <div className="flex items-center justify-between mt-6">
                     <div className="text-xs text-gray-600">
