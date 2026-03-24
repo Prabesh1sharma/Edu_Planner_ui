@@ -44,6 +44,7 @@ export default function PlanPage() {
                 if (plansData && plansData.modules) {
                     setPlanList(plansData.modules.map(module => ({
                         id: module.plan_id,
+                        module_number: module.module_number,
                         title: module.name,
                         completed: module.completed,
                         estimatedEndDate: module.end_date,

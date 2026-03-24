@@ -3,15 +3,22 @@ import { useState } from 'react';
 
 export default function AddPlanModal({ open, onClose, onAdd }) {
     const [name, setName] = useState('');
-    const [date, setDate] = useState('');
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState('');
     const [description, setDescription] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!name || !date) return;
-        onAdd({ title: name, estimatedEndDate: date,description });
+        if (!name || !endDate || !startDate) return;
+        onAdd({ 
+            name: name, 
+            start_date: startDate,
+            end_date: endDate,
+            description 
+        });
         setName('');
-        setDate('');
+        setStartDate(new Date().toISOString().split('T')[0]);
+        setEndDate('');
         setDescription('');
         onClose();
     };
@@ -53,11 +60,21 @@ export default function AddPlanModal({ open, onClose, onAdd }) {
                         />
                     </div>
                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            required
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        />
+                    </div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Estimated End Date</label>
                         <input
                             type="date"
-                            value={date}
-                            onChange={e => setDate(e.target.value)}
+                            value={endDate}
+                            onChange={e => setEndDate(e.target.value)}
                             required
                             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         />

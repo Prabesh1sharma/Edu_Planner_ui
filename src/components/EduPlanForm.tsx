@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useStreamPlan, StreamModule } from '../app/create-plan/useStreamPlan';
+import { manualCreateCourse } from '../api/plansApi';
+import { useRouter } from 'next/navigation';
 
 export type GeneratedPlan = {
     description: string;
@@ -156,6 +158,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
     const [timeCommitmentHours, setTimeCommitmentHours] = useState('');
 
     const { showSuccess, showError } = useToast();
+    const router = useRouter();
     const { state: stream, start: startStream } = useStreamPlan();
 
     const handleTopicChange = (idx: number, value: string) => {
@@ -166,11 +169,27 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
         e.preventDefault();
 
         if (mode === 'manual') {
-            onGenerate({
-                description: description || `A comprehensive plan for ${name}`,
-                topics: topics.filter(Boolean),
-                estimateDate,
-            });
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const payload = {
+                    topic: name,
+                    description: description,
+                    start_date: today,
+                    end_date: estimateDate,
+                    difficulty_level: difficultyLevel,
+                    time_commitment_hours_per_week: Number(timeCommitmentHours) || 10
+                };
+                
+                const result = await manualCreateCourse(payload) as any;
+                showSuccess("🎉 Course created successfully!");
+                if (result.course_id) {
+                    router.push(`/Plans/${result.course_id}`);
+                } else {
+                    router.push('/home');
+                }
+            } catch (err: any) {
+                showError(err.message || "Failed to create course");
+            }
             return;
         }
 
@@ -291,52 +310,22 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                             onChange={e => setDescription(e.target.value)} />
                     </div>
 
-                    {mode === 'ai' && (<>
-                        <div>
-                            <label style={labelStyle}>Difficulty Level</label>
-                            <select className="edu-input" style={inputStyle}
-                                value={difficultyLevel} onChange={e => setDifficultyLevel(e.target.value as any)}>
-                                <option value="beginner">🌱 Beginner</option>
-                                <option value="intermediate">⚡ Intermediate</option>
-                                <option value="advanced">🔥 Advanced</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Hours per Week</label>
-                            <input className="edu-input" style={inputStyle} type="number"
-                                value={timeCommitmentHours} required min="1" max="168" placeholder="e.g. 10"
-                                onChange={e => setTimeCommitmentHours(e.target.value)} />
-                        </div>
-                    </>)}
+                    <div>
+                        <label style={labelStyle}>Difficulty Level</label>
+                        <select className="edu-input" style={inputStyle}
+                            value={difficultyLevel} onChange={e => setDifficultyLevel(e.target.value as any)}>
+                            <option value="beginner">🌱 Beginner</option>
+                            <option value="intermediate">⚡ Intermediate</option>
+                            <option value="advanced">🔥 Advanced</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style={labelStyle}>Hours per Week</label>
+                        <input className="edu-input" style={inputStyle} type="number"
+                            value={timeCommitmentHours} required min="1" max="168" placeholder="e.g. 10"
+                            onChange={e => setTimeCommitmentHours(e.target.value)} />
+                    </div>
 
-                    {mode === 'manual' && (
-                        <div>
-                            <label style={labelStyle}>Topics</label>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                {topics.map((topic, idx) => (
-                                    <div key={idx} style={{ display: 'flex', gap: 8 }}>
-                                        <input className="edu-input" style={{ ...inputStyle, flex: 1 }}
-                                            type="text" value={topic} placeholder={`Topic ${idx + 1}`}
-                                            onChange={e => handleTopicChange(idx, e.target.value)} />
-                                        {topics.length > 1 && (
-                                            <button type="button"
-                                                onClick={() => setTopics(p => p.filter((_, i) => i !== idx))}
-                                                style={{
-                                                    border: '1px solid #fca5a5', borderRadius: 8,
-                                                    background: '#fff5f5', color: '#ef4444',
-                                                    padding: '0 12px', cursor: 'pointer', fontSize: 13,
-                                                }}>✕</button>
-                                        )}
-                                    </div>
-                                ))}
-                                <button type="button" onClick={() => setTopics(p => [...p, ''])} style={{
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    color: '#6366f1', fontWeight: 600, fontSize: 13,
-                                    textAlign: 'left', padding: '4px 0',
-                                }}>+ Add Topic</button>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {mode === 'ai' && (

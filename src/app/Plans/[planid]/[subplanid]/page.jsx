@@ -5,7 +5,7 @@ import { CheckSquare, Square } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '../../../../components/navbar';
 import AddSubPlanModal from '../../../../components/AddSubPlanModal';
-import { getPlanDetails, getCourseSubPlans, toggleSubPlanCompletion } from '../../../../api/plansApi';
+import { getPlanDetails, getCourseSubPlans, toggleSubPlanCompletion, manualCreateSubPlan } from '../../../../api/plansApi';
 import { useToast } from '../../../../context/ToastContext';
 import { useStreamSubPlan } from '../../../../hooks/useStreamSubPlan';
 
@@ -196,6 +196,7 @@ export default function SubPlanPage() {
                 if (subplansData && subplansData.subplans) {
                     setSubPlans(subplansData.subplans.map(sub => ({
                         id: sub.id,
+                        submodule_number: sub.submodule_number,
                         name: sub.name,
                         description: sub.description,
                         estimatedEndDate: sub.end_date,
@@ -225,6 +226,7 @@ export default function SubPlanPage() {
                 onCompleted: (submodules) => {
                     setSubPlans(submodules.map(sub => ({
                         id: sub.id,
+                        submodule_number: sub.submodule_number,
                         name: sub.name,
                         description: sub.description,
                         estimatedEndDate: sub.end_date,
@@ -239,8 +241,39 @@ export default function SubPlanPage() {
         );
     };
 
-    const handleAddSubPlan = (newSubPlan) => {
-        setSubPlans([...subPlans, newSubPlan]);
+    const handleAddSubPlan = async (subPlanData) => {
+        try {
+            const nextSubmoduleNumber = subPlans.length > 0 
+                ? Math.max(...subPlans.map(s => s.submodule_number || 0)) + 1 
+                : 1;
+
+            const payload = {
+                course_id: courseId,
+                module_id: planId,
+                submodule_number: nextSubmoduleNumber,
+                name: subPlanData.name,
+                description: subPlanData.description,
+                start_date: subPlanData.start_date,
+                end_date: subPlanData.end_date
+            };
+
+            const result = await manualCreateSubPlan(payload);
+            showSuccess(result.message || "Subplan created successfully!");
+
+            const newSub = {
+                id: result.submodule_id || Date.now(),
+                submodule_number: nextSubmoduleNumber,
+                name: subPlanData.name,
+                description: subPlanData.description,
+                estimatedEndDate: subPlanData.end_date,
+                completed: false,
+                type: 'reading' // Default type
+            };
+            setSubPlans([...subPlans, newSub]);
+            setShowModal(false);
+        } catch (error) {
+            showError(error.message || "Failed to create subplan");
+        }
     };
 
     if (loading) {
