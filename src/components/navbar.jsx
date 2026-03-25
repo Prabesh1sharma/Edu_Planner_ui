@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link';
-import { Home, List, Plus } from 'lucide-react';
+import { Home, List, Plus, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import ListPlan from './listplan'; 
@@ -58,6 +58,18 @@ export default function Navbar() {
                         </Link>
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                             Create Plan
+                        </div>
+                    </li>
+
+                    <li className="group relative">
+                        <Link 
+                            href="/settings" 
+                            className="flex items-center justify-center text-gray-600 hover:text-indigo-600 p-2 rounded-lg transition-colors duration-200"
+                        >
+                            <Settings size={28} />
+                        </Link>
+                        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                            Settings
                         </div>
                     </li>
                 </ul>
