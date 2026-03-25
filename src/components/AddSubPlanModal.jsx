@@ -2,23 +2,24 @@
 import { useState } from 'react';
 
 export default function AddSubPlanModal({ open, onClose, onAdd }) {
-    const [topic, setTopic] = useState('');
+    const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [date, setDate] = useState('');
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!topic.trim() || !description.trim() || !date) return;
+        if (!name.trim() || !description.trim() || !endDate || !startDate) return;
         onAdd({
-            id: Date.now(),
-            name: topic,
+            name: name,
             description,
-            estimatedEndDate: date,
-            completed: false
+            start_date: startDate,
+            end_date: endDate,
         });
-        setTopic('');
+        setName('');
         setDescription('');
-        setDate('');
+        setStartDate(new Date().toISOString().split('T')[0]);
+        setEndDate('');
         onClose();
     };
 
@@ -37,14 +38,14 @@ export default function AddSubPlanModal({ open, onClose, onAdd }) {
                 <h3 className="text-xl font-bold text-indigo-700 mb-6">Add Sub Plan</h3>
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                         <input
                             type="text"
-                            value={topic}
-                            onChange={e => setTopic(e.target.value)}
+                            value={name}
+                            onChange={e => setName(e.target.value)}
                             required
                             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                            placeholder="Subplan Topic"
+                            placeholder="Subplan Name"
                         />
                     </div>
                     <div>
@@ -59,11 +60,21 @@ export default function AddSubPlanModal({ open, onClose, onAdd }) {
                         />
                     </div>
                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            required
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        />
+                    </div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Estimated End Date</label>
                         <input
                             type="date"
-                            value={date}
-                            onChange={e => setDate(e.target.value)}
+                            value={endDate}
+                            onChange={e => setEndDate(e.target.value)}
                             required
                             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         />

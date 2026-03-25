@@ -5,7 +5,7 @@ import AddPlanModal from './AddPlanModal';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useToast } from '../context/ToastContext';
-import { togglePlanCompletion } from '../api/plansApi';
+import { togglePlanCompletion, manualCreatePlan } from '../api/plansApi';
 
 export default function PlanList({ plans, onAddPlan }) {
     const [showModal, setShowModal] = useState(false);
@@ -38,18 +38,40 @@ export default function PlanList({ plans, onAddPlan }) {
         }
     };
 
-    const handleAdd = (plan) => {
-        setLocalPlans([
-            ...localPlans,
-            {
-                id: localPlans.length + 1,
-                title: plan.title,
+    const handleAdd = async (planData) => {
+        try {
+            const nextModuleNumber = localPlans.length > 0 
+                ? Math.max(...localPlans.map(p => p.module_number || 0)) + 1 
+                : 1;
+
+            const payload = {
+                course_id: planid,
+                module_number: nextModuleNumber,
+                name: planData.name,
+                description: planData.description,
+                start_date: planData.start_date,
+                end_date: planData.end_date
+            };
+
+            const result = await manualCreatePlan(payload);
+            
+            showSuccess(result.message || "Plan created successfully!");
+            
+            // Update local state with the new plan
+            const newPlan = {
+                id: result.module_id || Date.now(),
+                module_number: nextModuleNumber,
+                title: planData.name,
                 completed: false,
-                estimatedEndDate: plan.estimatedEndDate,
-                subPlansCount: plan.subPlansCount,
+                estimatedEndDate: planData.end_date,
+                subPlansCount: 0,
                 subPlans: []
-            }
-        ]);
+            };
+            setLocalPlans([...localPlans, newPlan]);
+            setShowModal(false);
+        } catch (error) {
+            showError(error.message || "Failed to create plan");
+        }
     };
 
     return (

@@ -307,3 +307,81 @@ export const toggleSubPlanCompletion = async (submodule_id, module_id, is_comple
         throw error;
     }
 };
+
+/**
+ * Manually creates a new course.
+ * @param {Object} payload - The course details (topic, description, start_date, end_date, difficulty_level, time_commitment_hours_per_week).
+ * @returns {Promise<Object>} The created course details.
+ */
+export const manualCreateCourse = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Plans/manual_create_course`, {
+            method: 'POST',
+            headers: getHeaders(true),
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in manualCreateCourse:', error);
+        throw error;
+    }
+};
+
+/**
+ * Manually creates a new plan (module) for a course.
+ * @param {Object} payload - The plan details (course_id, module_number, name, description, start_date, end_date).
+ * @returns {Promise<Object>} The created plan details.
+ */
+export const manualCreatePlan = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Plans/manual_create_plan`, {
+            method: 'POST',
+            headers: getHeaders(true),
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in manualCreatePlan:', error);
+        throw error;
+    }
+};
+
+/**
+ * Manually creates a new subplan (submodule) for a course and module.
+ * @param {Object} payload - The subplan details (course_id, module_id, submodule_number, name, description, start_date, end_date).
+ * @returns {Promise<Object>} The created subplan details.
+ */
+export const manualCreateSubPlan = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/SubPlans/manual_create_subplan`, {
+            method: 'POST',
+            headers: getHeaders(true),
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            const errorMessage = data.detail || data.error || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in manualCreateSubPlan:', error);
+        throw error;
+    }
+};
