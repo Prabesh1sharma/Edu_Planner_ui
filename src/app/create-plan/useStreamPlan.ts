@@ -25,6 +25,15 @@ export type StreamCallbacks = {
     onError: (msg: string) => void;
 };
 
+interface StreamMessage {
+    error?: string;
+    status?: string;
+    message?: string;
+    type?: string;
+    data?: StreamModule;
+    total_modules?: number;
+}
+
 export function useStreamPlan() {
     const [state, setState] = useState<StreamState>({
         isStreaming: false,
@@ -113,7 +122,7 @@ export function useStreamPlan() {
                     normalized = normalized.slice(0, -2).trim();
                 }
 
-                let parsed: any;
+                let parsed: StreamMessage;
                 try {
                     parsed = JSON.parse(normalized);
                 } catch {
@@ -122,7 +131,7 @@ export function useStreamPlan() {
 
                 if (parsed.error) {
                     appendLog(`Server error: ${parsed.error}`);
-                    setState(s => ({ ...s, isStreaming: false, error: parsed.error }));
+                    setState(s => ({ ...s, isStreaming: false, error: parsed.error ?? null }));
                     callbacks.onError(parsed.error);
                     return;
                 }

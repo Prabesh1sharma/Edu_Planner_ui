@@ -69,7 +69,7 @@ function StreamingPanel({ modules, status, isStreaming, debugLog }: {
     isStreaming: boolean;
     debugLog: string[];
 }) {
-    const [showDebug, setShowDebug] = useState(false);
+
     if (!isStreaming && modules.length === 0 && debugLog.length === 0) return null;
 
     return (
@@ -153,7 +153,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
     const [name, setName] = useState('');
     const [estimateDate, setEstimateDate] = useState('');
     const [description, setDescription] = useState('');
-    const [topics, setTopics] = useState<string[]>(['']);
+
     const [difficultyLevel, setDifficultyLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
     const [timeCommitmentHours, setTimeCommitmentHours] = useState('');
 
@@ -161,9 +161,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
     const router = useRouter();
     const { state: stream, start: startStream } = useStreamPlan();
 
-    const handleTopicChange = (idx: number, value: string) => {
-        setTopics(prev => { const n = [...prev]; n[idx] = value; return n; });
-    };
+
 
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -180,15 +178,15 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     time_commitment_hours_per_week: Number(timeCommitmentHours) || 10
                 };
                 
-                const result = await manualCreateCourse(payload) as any;
+                const result = await manualCreateCourse(payload) as Record<string, unknown>;
                 showSuccess("🎉 Course created successfully!");
                 if (result.course_id) {
                     router.push(`/Plans/${result.course_id}`);
                 } else {
                     router.push('/home');
                 }
-            } catch (err: any) {
-                showError(err.message || "Failed to create course");
+            } catch (err: unknown) {
+                showError(err instanceof Error ? err.message : "Failed to create course");
             }
             return;
         }
@@ -313,7 +311,7 @@ export default function EduPlanForm({ onGenerate }: EduPlanFormProps) {
                     <div>
                         <label style={labelStyle}>Difficulty Level</label>
                         <select className="edu-input" style={inputStyle}
-                            value={difficultyLevel} onChange={e => setDifficultyLevel(e.target.value as any)}>
+                            value={difficultyLevel} onChange={e => setDifficultyLevel(e.target.value as 'beginner' | 'intermediate' | 'advanced')}>
                             <option value="beginner">🌱 Beginner</option>
                             <option value="intermediate">⚡ Intermediate</option>
                             <option value="advanced">🔥 Advanced</option>

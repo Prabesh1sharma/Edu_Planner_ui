@@ -7,13 +7,21 @@ import RecommendationsSection from '../../../../../components/RecommendationsSec
 import Navbar from '../../../../../components/navbar';
 import { getSubPlanDetail } from '../../../../../api/plansApi';
 
+interface SubPlanData {
+    title: string;
+    description: string;
+    type: string;
+    key_activities: string[];
+    learning_outcomes: string[];
+}
+
 export default function SubPlanDetailPage() {
     const params = useParams();
     const courseId = params.planid as string;
     const planId = params.subplanid as string;
     const subplanId = params.subplandetailid as string;
 
-    const [subplan, setSubplan] = useState<any>(null);
+    const [subplan, setSubplan] = useState<SubPlanData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -23,20 +31,20 @@ export default function SubPlanDetailPage() {
         const fetchDetail = async () => {
             try {
                 setLoading(true);
-                const data = await getSubPlanDetail(courseId, planId, subplanId) as any;
+                const data = await getSubPlanDetail(courseId, planId, subplanId) as Record<string, unknown>;
                 
                 // Exclude the IDs and map 'name' to 'title' for the UI component
                 setSubplan({
-                    title: data.name,
-                    description: data.description,
-                    type: data.type,
-                    key_activities: data.key_activities,
-                    learning_outcomes: data.learning_outcomes
+                    title: data.name as string,
+                    description: data.description as string,
+                    type: data.type as string,
+                    key_activities: data.key_activities as string[],
+                    learning_outcomes: data.learning_outcomes as string[],
                 });
                 setError(null);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error(err);
-                setError(err.message || 'Failed to fetch subplan details');
+                setError(err instanceof Error ? err.message : 'Failed to fetch subplan details');
             } finally {
                 setLoading(false);
             }
