@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Home, List, Plus, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import ListPlan from './listplan'; 
+import ListPlan from './ListPlan'; 
 
 export default function Navbar() {
     const [showListPlan, setShowListPlan] = useState(false);
