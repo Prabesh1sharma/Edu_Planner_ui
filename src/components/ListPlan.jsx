@@ -47,9 +47,12 @@ export default function ListPlan({ open, onClose }) {
     );
 
     return (
-        <div className="fixed left-16 top-0 h-full w-80 bg-white shadow-2xl z-50 p-6 transition-all duration-300 border-l border-gray-200 flex flex-col">
+        <div className={`fixed z-40 bg-white shadow-2xl transition-all duration-300 border-gray-200 flex flex-col 
+            bottom-16 left-0 w-full h-[calc(100%-4rem)] border-t rounded-t-2xl md:rounded-none md:border-t-0 md:border-l md:top-0 md:bottom-auto md:left-16 md:w-80 md:h-full
+            ${open ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:-translate-x-full'}
+        `}>
             {/* Header */}
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+            <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-gray-100">
                 <h2 className="text-xl font-bold text-indigo-700">Your Learning Plans</h2>
                 <button
                     onClick={onClose}
@@ -59,7 +62,9 @@ export default function ListPlan({ open, onClose }) {
                 </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Content area: need padding inside since we removed p-6 from parent */}
+            <div className="flex-1 overflow-hidden flex flex-col p-6 pt-4">
+                {/* Search Bar */}
             <div className="mb-6">
                 <div className="relative">
                     <input
@@ -170,6 +175,7 @@ export default function ListPlan({ open, onClose }) {
                     </svg>
                     Create New Plan
                 </Link>
+            </div>
             </div>
         </div>
     );

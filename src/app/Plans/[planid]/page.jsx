@@ -73,7 +73,7 @@ export default function PlanPage() {
         return (
             <div className="min-h-screen bg-gray-50 flex">
                 <Navbar />
-                <main className="flex-1 ml-16 flex items-center justify-center">
+                <main className="flex-1 pb-20 md:pb-0 md:ml-16 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                         <p className="text-gray-500 font-medium">Loading plan details...</p>
@@ -87,7 +87,7 @@ export default function PlanPage() {
         return (
             <div className="min-h-screen bg-gray-50 flex">
                 <Navbar />
-                <main className="flex-1 ml-16 flex items-center justify-center">
+                <main className="flex-1 pb-20 md:pb-0 md:ml-16 flex items-center justify-center">
                     <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
                         <div className="text-red-500 text-5xl mb-4">⚠️</div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Plan</h2>
@@ -107,7 +107,7 @@ export default function PlanPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <Navbar />
-            <main className="flex-1 ml-16 py-10 px-6">
+            <main className="flex-1 pb-20 md:pb-10 md:ml-16 py-10 px-4 sm:px-6">
                 {topic && <TopicDetails topic={topic} />}
                 {topic && (
                     <TopicMetrics

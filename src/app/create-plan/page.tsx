@@ -8,7 +8,7 @@ export default function CreatePlanPage() {
     const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
 
     return (
-        <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="min-h-screen bg-gray-50 pb-20 md:pb-10 pt-10 px-4 md:ml-16">
             <Navbar />
             <EduPlanForm onGenerate={setGeneratedPlan} />
             {generatedPlan && <GeneratedPlanPreview plan={generatedPlan} />}
