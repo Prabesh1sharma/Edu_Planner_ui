@@ -128,7 +128,7 @@ export default function ActivitiesPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
-            <main className="ml-16 p-6">
+            <main className="pb-20 md:pb-6 md:ml-16 p-4 sm:p-6">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
                     <div className="mb-6">

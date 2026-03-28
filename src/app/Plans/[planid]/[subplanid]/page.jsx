@@ -308,7 +308,7 @@ export default function SubPlanPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="min-h-screen bg-gray-50 pb-20 md:pb-10 pt-10 px-4 md:ml-16">
             <Navbar />
 
             {/* Animations for streaming */}
