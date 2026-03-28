@@ -100,7 +100,7 @@ export default function Home() {
             <Navbar />
             
             {/* Main Content */}
-            <main className="ml-16 p-6">
+            <main className="ml-16 p-3 sm:p-6">
                 {/* Top Bar with Profile */}
                 <div className="max-w-7xl mx-auto mb-6">
                     <div className="flex justify-between items-center">
