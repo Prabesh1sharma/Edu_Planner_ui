@@ -1,5 +1,6 @@
 import './globals.css'
 import { ToastProvider } from '../context/ToastContext'
+import Footer from '../components/Footer'
 
 export const metadata = {
   title: 'EduPlanner',
@@ -13,9 +14,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <ToastProvider>
-          {children}
+          <div style={{ flex: 1 }}>
+            {children}
+          </div>
+          <Footer />
         </ToastProvider>
       </body>
     </html>
